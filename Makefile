@@ -8,7 +8,7 @@ default: test vet dev
 
 deps: verifysha depsinternal verifysha
 
-ci: deps test vet
+ci: deps vet test testrace
 
 release: checkversion deps test vet bin
 
@@ -47,17 +47,18 @@ testrace:
 	go test -race $(TEST) $(TESTARGS) -timeout=15s
 
 checkversion:
-	@grep 'const VersionPrerelease = ""' version.go > /dev/null || \
-		echo "ERROR: You must remove prerelease tags from version.go prior to release." && \
-		exit 1
+	@grep 'const VersionPrerelease = ""' version.go > /dev/null ; if [ $$? -ne 0 ]; then \
+		echo "ERROR: You must remove prerelease tags from version.go prior to release."; \
+		exit 1; \
+	fi
 
 # Don't call this directly. Use deps instead. The reason is that we have to use
 # make dependency targets to verifysha, and we can't call them via $(MAKE) or
 # they will execute in a submake which may be operating on a different commit.
 depsinternal:
 	@git diff-index --quiet HEAD ; if [ $$? -ne 0 ]; then \
-		echo "ERROR: Your git working tree has uncommitted changes. deps will fail. Please stash or commit your changes first." ; \
-		exit 1 ; \
+		echo "ERROR: Your git working tree has uncommitted changes. deps will fail. Please stash or commit your changes first."; \
+		exit 1; \
 	fi
 	go get -u github.com/mitchellh/gox
 	go get -u golang.org/x/tools/cmd/stringer
