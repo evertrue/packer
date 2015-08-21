@@ -67,7 +67,9 @@ depsinternal:
 		| grep -v github.com/mitchellh/packer \
 		| grep -v '/internal/' \
 		| sort -u \
-		| xargs go get -f -u -v -d
+		| xargs go get -f -u -v -d ; if [ $$? -eq 0 ]; then \
+		echo "ERROR: go get failed. Your git branch may have changed; you were on $(GITBRANCH) ($(GITSHA))."; \
+	fi
 
 updatedeps:
 	@echo "WARN: Please use `make deps` instead."
